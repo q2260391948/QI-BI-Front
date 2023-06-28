@@ -11,19 +11,15 @@ import {
   Upload,
 } from 'antd';
 import {FormattedMessage, history, useIntl, useModel, Helmet} from '@umijs/max';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import TextArea from "antd/es/input/TextArea";
 import Input from "antd/es/input/Input";
-import {uploadFileUsingPOST} from "@/services/QI-BI/chartController";
+import {listChartByPageUsingPOST, uploadFileUsingPOST} from "@/services/QI-BI/chartController";
 import {message} from "antd/lib";
 import ReactECharts from 'echarts-for-react';
 import Card from "antd/es/card/Card";
 
-const Login: React.FC = () => {
-  const [userLoginState, setUserLoginState] = useState<API.LoginResult>({});
-  const [type, setType] = useState<string>('account');
-  const {initialState, setInitialState} = useModel('@@initialState');
-
+const AddChart: React.FC = () => {
   const formItemLayout = {
     labelCol: {span: 6},
     wrapperCol: {span: 14},
@@ -32,6 +28,15 @@ const Login: React.FC = () => {
   const [chart, setChart] = useState<API.BiResponse>();
   const [option, setoption] = useState<any>();
   const [submitting, setSubmitting] = useState<Boolean>(false);
+  const {initialState, setInitialState} = useModel('@@initialState');
+  const {currentUser} = initialState ?? {};
+
+  useEffect(() => {
+        if (currentUser===null){
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/');
+        }
+  })
 
   const onFinish = async (values: any) => {
     setSubmitting(true);
@@ -40,6 +45,7 @@ const Login: React.FC = () => {
       file: undefined
     };
     try {
+      console.log(values.file.file.originFileObj)
       const res = await uploadFileUsingPOST(params, {}, values.file.file.originFileObj);
       console.log(res)
       if (res?.data) {
@@ -60,7 +66,8 @@ const Login: React.FC = () => {
         message.error("分析失败");
       }
     } catch (e: any) {
-
+      setSubmitting(false);
+      message.error("分析失败");
     }
   };
   return (
@@ -136,4 +143,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default AddChart;
